@@ -3,6 +3,7 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { setupAuth } from "./auth";
+import { setupSocialAuth } from "./social-auth";
 import { storage } from "./storage";
 import { insertLikeSchema, insertMessageSchema } from "@shared/schema";
 import multer from "multer";
@@ -25,6 +26,7 @@ const upload = multer({
 
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
+  setupSocialAuth(app);
 
   // Discovery endpoint
   app.get("/api/discovery", async (req, res) => {
@@ -285,6 +287,107 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error updating profile:", error);
       res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // Import content from social media platforms
+  app.post('/api/social/import/:platform/:type', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const { platform, type } = req.params;
+    const user = req.user;
+
+    try {
+      // Check if platform is connected
+      const isConnected = user[`${platform}Connected`];
+      if (!isConnected) {
+        return res.status(400).json({ error: `${platform} account not connected` });
+      }
+
+      // Simulate content import - in real implementation, this would use SocialMediaAPI
+      let importedContent = {};
+      
+      switch (platform) {
+        case 'instagram':
+          if (type === 'photos') {
+            importedContent = {
+              type: 'photos',
+              count: 5,
+              photos: [
+                { id: '1', url: 'https://via.placeholder.com/400x400?text=Instagram+Photo+1', caption: 'Beautiful sunset' },
+                { id: '2', url: 'https://via.placeholder.com/400x400?text=Instagram+Photo+2', caption: 'Coffee time' },
+                { id: '3', url: 'https://via.placeholder.com/400x400?text=Instagram+Photo+3', caption: 'Travel memories' }
+              ]
+            };
+          } else if (type === 'bio') {
+            importedContent = {
+              type: 'bio',
+              bio: 'Lifestyle blogger | Travel enthusiast | Coffee lover ☕',
+              location: 'Bangkok, Thailand'
+            };
+          }
+          break;
+          
+        case 'tiktok':
+          if (type === 'videos') {
+            importedContent = {
+              type: 'videos',
+              count: 3,
+              videos: [
+                { id: '1', thumbnail: 'https://via.placeholder.com/300x400?text=TikTok+Video+1', title: 'Dance Challenge', views: 10000 },
+                { id: '2', thumbnail: 'https://via.placeholder.com/300x400?text=TikTok+Video+2', title: 'Cooking Tutorial', views: 5000 },
+                { id: '3', thumbnail: 'https://via.placeholder.com/300x400?text=TikTok+Video+3', title: 'Daily Vlog', views: 8000 }
+              ]
+            };
+          } else if (type === 'bio') {
+            const profile = JSON.parse(user.tiktokProfile || '{}');
+            importedContent = {
+              type: 'bio',
+              bio: profile.bio_description || 'Creative content creator',
+              stats: {
+                followers: profile.follower_count || 0,
+                videos: profile.video_count || 0,  
+                likes: profile.likes_count || 0
+              }
+            };
+          }
+          break;
+          
+        case 'facebook':
+          if (type === 'photos') {
+            importedContent = {
+              type: 'photos',
+              count: 4,
+              photos: [
+                { id: '1', url: 'https://via.placeholder.com/400x400?text=Facebook+Photo+1', caption: 'Family gathering' },
+                { id: '2', url: 'https://via.placeholder.com/400x400?text=Facebook+Photo+2', caption: 'Weekend adventure' }
+              ]
+            };
+          } else if (type === 'info') {
+            const profile = JSON.parse(user.facebookProfile || '{}');
+            importedContent = {
+              type: 'info',
+              name: profile.name,
+              location: profile.location?.name,
+              ageRange: profile.age_range?.min ? `${profile.age_range.min}+` : null
+            };
+          }
+          break;
+      }
+
+      // In a real app, you would save the imported content to the database
+      res.json({
+        success: true,
+        platform,
+        type,
+        data: importedContent
+      });
+
+    } catch (error) {
+      console.error(`Error importing ${type} from ${platform}:`, error);
+      res.status(500).json({ error: `Failed to import ${type} from ${platform}` });
     }
   });
 

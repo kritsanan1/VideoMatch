@@ -72,6 +72,36 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
+  // Social media methods
+  async updateSocialConnection(id: number, platform: string, data: any): Promise<User | undefined> {
+    const updates: any = {};
+    
+    switch (platform) {
+      case 'facebook':
+        updates.facebookConnected = true;
+        updates.facebookId = data.id;
+        updates.facebookProfile = JSON.stringify(data.profile);
+        break;
+      case 'twitter':
+        updates.twitterConnected = true;
+        updates.twitterId = data.id;
+        updates.twitterProfile = JSON.stringify(data.profile);
+        break;
+      case 'instagram':
+        updates.instagramConnected = true;
+        updates.instagramId = data.id;
+        updates.instagramProfile = JSON.stringify(data.profile);
+        break;
+      case 'tiktok':
+        updates.tiktokConnected = true;
+        updates.tiktokId = data.id;
+        updates.tiktokProfile = JSON.stringify(data.profile);
+        break;
+    }
+
+    return this.updateUser(id, updates);
+  }
+
   async getDiscoveryUsers(userId: number, limit = 10): Promise<User[]> {
     // Get users that haven't been liked/disliked by current user
     const likedUserIds = await db

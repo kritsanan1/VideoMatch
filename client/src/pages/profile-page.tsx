@@ -10,7 +10,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProfilePageProps {
-  onNavigateToPage?: (page: "discover" | "matches" | "chat" | "profile" | "pricing") => void;
+  onNavigateToPage?: (page: "discover" | "matches" | "chat" | "profile" | "pricing" | "social") => void;
 }
 
 export default function ProfilePage({ onNavigateToPage }: ProfilePageProps = {}) {
@@ -224,6 +224,13 @@ export default function ProfilePage({ onNavigateToPage }: ProfilePageProps = {})
             <div className="space-y-3">
               <Button variant="ghost" className="w-full justify-start">
                 Edit Profile
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start"
+                onClick={() => onNavigateToPage?.("social")}
+              >
+                Social Connections
               </Button>
               <Button variant="ghost" className="w-full justify-start">
                 Notifications
