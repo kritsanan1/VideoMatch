@@ -137,6 +137,92 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Pricing/Subscription routes
+  app.post("/api/subscribe", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const { planId } = req.body;
+    
+    try {
+      // In a real app, integrate with payment processor (Stripe, etc.)
+      let subscriptionPlan = "free";
+      let subscriptionExpiry = null;
+      let isPremium = false;
+
+      if (planId === "premium" || planId === "premium-yearly") {
+        subscriptionPlan = "premium";
+        isPremium = true;
+        // Set expiry date (1 month or 1 year from now)
+        const expiryDate = new Date();
+        if (planId === "premium-yearly") {
+          expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+        } else {
+          expiryDate.setMonth(expiryDate.getMonth() + 1);
+        }
+        subscriptionExpiry = expiryDate;
+      } else if (planId === "gold" || planId === "gold-yearly") {
+        subscriptionPlan = "gold";
+        isPremium = true;
+        const expiryDate = new Date();
+        if (planId === "gold-yearly") {
+          expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+        } else {
+          expiryDate.setMonth(expiryDate.getMonth() + 1);
+        }
+        subscriptionExpiry = expiryDate;
+      }
+
+      const updatedUser = await storage.updateUser(req.user.id, {
+        isPremium,
+        subscriptionPlan,
+        subscriptionExpiry
+      });
+
+      res.json({ 
+        success: true, 
+        user: updatedUser,
+        message: `Successfully subscribed to ${subscriptionPlan} plan!`
+      });
+    } catch (error) {
+      console.error("Subscription error:", error);
+      res.status(500).json({ message: "Failed to process subscription" });
+    }
+  });
+
+  app.get("/api/subscription-status", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const user = req.user;
+    const now = new Date();
+    
+    // Check if subscription has expired
+    if (user.subscriptionExpiry && new Date(user.subscriptionExpiry) < now) {
+      // Expire the subscription
+      await storage.updateUser(user.id, {
+        isPremium: false,
+        subscriptionPlan: "free",
+        subscriptionExpiry: null
+      });
+      
+      res.json({
+        plan: "free",
+        expired: true,
+        message: "Your subscription has expired"
+      });
+    } else {
+      res.json({
+        plan: user.subscriptionPlan || "free",
+        isPremium: user.isPremium || false,
+        expiryDate: user.subscriptionExpiry,
+        expired: false
+      });
+    }
+  });
+
   // Video upload endpoint
   app.post("/api/upload-video", upload.single('video'), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

@@ -1,6 +1,6 @@
 import { users, matches, likes, messages, type User, type InsertUser, type Match, type Like, type Message, type InsertLike, type InsertMessage } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, sql } from "drizzle-orm";
+import { eq, and, or, desc, sql, notInArray } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -81,13 +81,23 @@ export class DatabaseStorage implements IStorage {
     
     const likedIds = likedUserIds.map(l => l.userId);
     
+    if (likedIds.length === 0) {
+      // No previous likes, return all users except current user
+      return await db
+        .select()
+        .from(users)
+        .where(sql`${users.id} != ${userId}`)
+        .limit(limit);
+    }
+    
+    // Use Drizzle's notInArray function for proper NOT IN clause
     return await db
       .select()
       .from(users)
       .where(
         and(
           sql`${users.id} != ${userId}`,
-          likedIds.length > 0 ? sql`${users.id} NOT IN (${likedIds.join(',')})` : sql`TRUE`
+          notInArray(users.id, likedIds)
         )
       )
       .limit(limit);

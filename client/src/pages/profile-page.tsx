@@ -9,7 +9,11 @@ import VideoUpload from "@/components/video-upload";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-export default function ProfilePage() {
+interface ProfilePageProps {
+  onNavigateToPage?: (page: "discover" | "matches" | "chat" | "profile" | "pricing") => void;
+}
+
+export default function ProfilePage({ onNavigateToPage }: ProfilePageProps = {}) {
   const { user, logoutMutation } = useAuth();
   const [showVideoUpload, setShowVideoUpload] = useState(false);
   const { toast } = useToast();
@@ -183,6 +187,7 @@ export default function ProfilePage() {
             <Button
               variant="secondary"
               className="bg-white text-lovematch-pink hover:bg-gray-100"
+              onClick={() => onNavigateToPage?.("pricing")}
             >
               Start Free Trial
             </Button>

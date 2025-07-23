@@ -4,6 +4,7 @@ import SwipeCard from "@/components/swipe-card";
 import MatchesPage from "./matches-page";
 import ChatPage from "./chat-page";
 import ProfilePage from "./profile-page";
+import PricingPage from "./pricing-page";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import { User } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
-type Page = "discover" | "matches" | "chat" | "profile";
+type Page = "discover" | "matches" | "chat" | "profile" | "pricing";
 
 export default function HomePage() {
   const [currentPage, setCurrentPage] = useState<Page>("discover");
@@ -113,7 +114,9 @@ export default function HomePage() {
       case "chat":
         return <ChatPage onBack={() => setCurrentPage("matches")} />;
       case "profile":
-        return <ProfilePage />;
+        return <ProfilePage onNavigateToPage={setCurrentPage} />;
+      case "pricing":
+        return <PricingPage onBack={() => setCurrentPage("profile")} />;
       default:
         return null;
     }

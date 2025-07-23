@@ -19,6 +19,8 @@ export const users = pgTable("users", {
   facebookConnected: boolean("facebook_connected").default(false),
   twitterConnected: boolean("twitter_connected").default(false),
   isPremium: boolean("is_premium").default(false),
+  subscriptionPlan: varchar("subscription_plan", { length: 50 }).default("free"), // free, premium, gold
+  subscriptionExpiry: timestamp("subscription_expiry"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
