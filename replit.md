@@ -85,3 +85,16 @@ The application is configured for Replit deployment with the following setup:
 - `NODE_ENV`: Environment mode (development/production)
 
 The app uses a mobile-first responsive design optimized for dating app usage patterns, with a maximum width container to simulate mobile experience on desktop browsers.
+
+## Recent Changes
+
+### Pricing System Implementation (January 2025)
+- Added comprehensive 3-tier pricing system (Free, Premium ฿299/month, Gold ฿499/month)
+- Implemented subscription management with database tracking
+- Added Thai baht currency pricing with annual savings options
+- Created pricing page with feature comparisons and testimonials
+- Integrated subscription status display in user profiles
+- Added subscription management API endpoints
+- Fixed discovery system SQL query bug for better performance
+
+The pricing system includes a simulated payment flow that can be integrated with real payment processors like Stripe when needed.

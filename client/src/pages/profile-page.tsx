@@ -176,23 +176,44 @@ export default function ProfilePage({ onNavigateToPage }: ProfilePageProps = {})
           </CardContent>
         </Card>
 
-        {/* Premium Upgrade */}
-        <Card className="bg-gradient-to-r from-lovematch-pink to-lovematch-orange text-white">
-          <CardContent className="p-6 text-center">
-            <Star className="h-12 w-12 mx-auto mb-4" />
-            <h3 className="text-xl font-bold mb-2">Upgrade to Premium</h3>
-            <p className="text-sm opacity-90 mb-4">
-              Get unlimited likes, see who liked you, and boost your profile
-            </p>
-            <Button
-              variant="secondary"
-              className="bg-white text-lovematch-pink hover:bg-gray-100"
-              onClick={() => onNavigateToPage?.("pricing")}
-            >
-              Start Free Trial
-            </Button>
-          </CardContent>
-        </Card>
+        {/* Premium Status */}
+        {user && !user.isPremium ? (
+          <Card className="bg-gradient-to-r from-lovematch-pink to-lovematch-orange text-white">
+            <CardContent className="p-6 text-center">
+              <Star className="h-12 w-12 mx-auto mb-4" />
+              <h3 className="text-xl font-bold mb-2">Upgrade to Premium</h3>
+              <p className="text-sm opacity-90 mb-4">
+                Get unlimited likes, see who liked you, and boost your profile
+              </p>
+              <Button
+                variant="secondary"
+                className="bg-white text-lovematch-pink hover:bg-gray-100"
+                onClick={() => onNavigateToPage?.("pricing")}
+              >
+                View Plans
+              </Button>
+            </CardContent>
+          </Card>
+        ) : user && user.isPremium ? (
+          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+            <CardContent className="p-6 text-center">
+              <Crown className="h-12 w-12 mx-auto mb-4" />
+              <h3 className="text-xl font-bold mb-2">
+                {user.subscriptionPlan === 'gold' ? 'Gold Member' : 'Premium Member'}
+              </h3>
+              <p className="text-sm opacity-90 mb-4">
+                You have access to all premium features
+              </p>
+              <Button
+                variant="secondary"
+                className="bg-white text-green-600 hover:bg-gray-100"
+                onClick={() => onNavigateToPage?.("pricing")}
+              >
+                Manage Plan
+              </Button>
+            </CardContent>
+          </Card>
+        ) : null}
 
         {/* Settings */}
         <Card>

@@ -95,7 +95,21 @@ export default function PricingPage({ onBack }: PricingPageProps) {
   ];
 
   const handleSelectPlan = async (planId: string) => {
+    if (planId === 'basic') return;
+    
     setSelectedPlan(planId);
+    
+    // Show confirmation dialog
+    const confirmUpgrade = window.confirm(
+      `Upgrade to ${planId.includes('premium') ? 'Premium' : 'Gold'} plan?\n\n` +
+      `This will activate premium features immediately. ` +
+      `In a production app, this would redirect to secure payment processing.`
+    );
+    
+    if (!confirmUpgrade) {
+      setSelectedPlan(null);
+      return;
+    }
     
     try {
       const res = await fetch("/api/subscribe", {
@@ -112,11 +126,15 @@ export default function PricingPage({ onBack }: PricingPageProps) {
       
       const data = await res.json();
       
-      // Show success message and go back to profile
-      window.location.reload(); // Refresh to update user data
+      // Show success message
+      alert(`🎉 Successfully upgraded to ${data.user.subscriptionPlan} plan!\n\nYou now have access to all premium features.`);
+      
+      // Go back to profile to see updated status
+      onBack();
     } catch (error) {
       console.error("Subscription error:", error);
-      // In a real app, show error toast
+      alert("Failed to process subscription. Please try again.");
+      setSelectedPlan(null);
     }
   };
 
@@ -142,12 +160,46 @@ export default function PricingPage({ onBack }: PricingPageProps) {
                 <div>
                   <p className="font-semibold text-gray-800">Current Plan</p>
                   <p className="text-sm text-gray-600">
-                    {user.isPremium === true ? "Premium Active" : "Free Plan"}
+                    {user.isPremium === true 
+                      ? `${user.subscriptionPlan?.charAt(0).toUpperCase()}${user.subscriptionPlan?.slice(1)} Active` 
+                      : "Free Plan"}
                   </p>
+                  {user.subscriptionExpiry && (
+                    <p className="text-xs text-gray-500">
+                      Expires: {new Date(user.subscriptionExpiry).toLocaleDateString()}
+                    </p>
+                  )}
                 </div>
-                <Badge variant={user.isPremium === true ? "default" : "secondary"}>
-                  {user.isPremium === true ? "Premium" : "Free"}
-                </Badge>
+                <div className="text-right">
+                  <Badge variant={user.isPremium === true ? "default" : "secondary"}>
+                    {user.isPremium === true ? user.subscriptionPlan?.charAt(0).toUpperCase() + user.subscriptionPlan?.slice(1) : "Free"}
+                  </Badge>
+                  {user.isPremium && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="ml-2 text-red-600 hover:text-red-700"
+                      onClick={async () => {
+                        if (window.confirm("Are you sure you want to cancel your subscription?")) {
+                          try {
+                            const res = await fetch("/api/cancel-subscription", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" }
+                            });
+                            if (res.ok) {
+                              alert("Subscription cancelled successfully");
+                              window.location.reload();
+                            }
+                          } catch (error) {
+                            alert("Failed to cancel subscription");
+                          }
+                        }
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -215,11 +267,19 @@ export default function PricingPage({ onBack }: PricingPageProps) {
                       className={`w-full mt-4 ${
                         plan.id === 'basic' 
                           ? 'bg-gray-600 hover:bg-gray-700' 
+                          : selectedPlan === plan.id
+                          ? 'bg-gray-400 cursor-not-allowed'
                           : 'bg-gradient-to-r from-lovematch-pink to-lovematch-orange hover:from-lovematch-pink/90 hover:to-lovematch-orange/90'
                       }`}
-                      disabled={plan.id === 'basic' && user && user.isPremium !== true}
+                      disabled={
+                        plan.id === 'basic' || 
+                        selectedPlan === plan.id ||
+                        (user && user.subscriptionPlan === plan.id)
+                      }
                     >
-                      {plan.id === 'basic' ? 'Current Plan' : 'Choose Plan'}
+                      {user && user.subscriptionPlan === plan.id ? 'Current Plan' :
+                       plan.id === 'basic' ? 'Free Plan' : 
+                       selectedPlan === plan.id ? 'Processing...' : 'Choose Plan'}
                     </Button>
                   </CardContent>
                 </Card>

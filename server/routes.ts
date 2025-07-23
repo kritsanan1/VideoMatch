@@ -223,6 +223,30 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Cancel subscription
+  app.post("/api/cancel-subscription", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    try {
+      const updatedUser = await storage.updateUser(req.user.id, {
+        isPremium: false,
+        subscriptionPlan: "free",
+        subscriptionExpiry: null
+      });
+
+      res.json({ 
+        success: true, 
+        user: updatedUser,
+        message: "Subscription cancelled successfully"
+      });
+    } catch (error) {
+      console.error("Cancellation error:", error);
+      res.status(500).json({ message: "Failed to cancel subscription" });
+    }
+  });
+
   // Video upload endpoint
   app.post("/api/upload-video", upload.single('video'), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
